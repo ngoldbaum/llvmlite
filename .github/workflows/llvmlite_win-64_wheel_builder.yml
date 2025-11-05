@@ -90,7 +90,7 @@ jobs:
           # TODO: delete when PyLIEF ships free-threaded wheels
           if [[ "${{ matrix.python-version }}" == *t ]]; then
               python -m pip install tomli scikit-build-core pydantic pathspec setuptools==70.2.0
-              python -m build LIEF/api/python --wheel --no-isolation
+              python -m build LIEF/api/python --wheel --no-isolation --skip-dependency-check
               python -m pip install LIEF/api/python/dist/lief*.whl
           fi
           # TODO: move to pip install step above after deleting PyLIEF build
