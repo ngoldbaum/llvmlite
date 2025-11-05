@@ -200,11 +200,8 @@ jobs:
           fi
 
           echo "Installing lief for distribution testing"
-          # TODO: delete when PyLIEF ships free-threaded wheels
-          if [[ "${{ matrix.python-version }}" == *t ]]; then
-              "${PYTHON_PATH}" -m pip install tomli scikit-build-core pydantic pathspec
-              "${PYTHON_PATH}" -m pip install -v "lief @ git+https://github.com/lief-project/LIEF##subdirectory=api/python" --no-build-isolation
-          else
+          # TODO: make unconditional when PyLIEF ships free-threaded wheels
+          if [[ "${{ matrix.python-version }}" != *t ]]; then
               "${PYTHON_PATH}" -m pip install -v lief
           fi
 

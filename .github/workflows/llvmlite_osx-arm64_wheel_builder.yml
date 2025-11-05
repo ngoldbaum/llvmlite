@@ -60,15 +60,6 @@ jobs:
           repository: ${{ github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # TODO: delete when PyLIEF ships free-threaded wheels
-      - name: Clone PyLIEF repository (free-threading only)
-        if: ${{ endsWith(matrix.python-version, 't') }}
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          repository: lief-project/LIEF
-          path: LIEF
-          fetch-depth: 0
-
       - name: Install build dependencies
         run: |
           if [[ "${{ matrix.python-version }}" == *t ]]; then
@@ -85,12 +76,7 @@ jobs:
               conda install -c defaults "${CHAN}::llvmdev=${{ env.FALLBACK_LLVMDEV_VERSION }}"
           fi
           python -m pip install build wheel setuptools
-          # TODO: delete when PyLIEF ships free-threaded wheels
-          if [[ "${{ matrix.python-version }}" == *t ]]; then
-              python -m pip install tomli scikit-build-core pydantic pathspec
-              python -m build LIEF/api/python --wheel --no-isolation --skip-dependency-check
-              python -m pip install LIEF/api/python/dist/lief*.whl
-          fi
+
           # Hide libunwind to prevent it from being linked against during build
           # On macOS, if libunwind.dylib from the llvmdev conda package gets linked, the resulting wheel
           # will have a runtime dependency on @rpath/libunwind.1.dylib.
@@ -112,17 +98,6 @@ jobs:
         with:
           name: llvmlite-osx-arm64-py${{ matrix.python-version }}
           path: dist/*.whl
-          compression-level: 0
-          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
-          if-no-files-found: error
-
-      # TODO: delete when PyLIEF ships free-threaded wheels
-      - name: Upload PyLIEF wheel (free-threading only)
-        if: ${{ endsWith(matrix.python-version, 't') }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          name: PyLIEF-osx-arm64-py${{ matrix.python-version }}
-          path: LIEF/api/python/dist/*.whl
           compression-level: 0
           retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
           if-no-files-found: error
@@ -205,14 +180,6 @@ jobs:
           name: llvmlite-osx-arm64-py${{ matrix.python-version }}
           path: dist
 
-      # TODO: delete when PyLIEF ships free-threaded wheels
-      - name: Download PyLIEF wheel (free-threading only)
-        if: ${{ endsWith(matrix.python-version, 't') }}
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
-        with:
-          name: PyLIEF-osx-arm64-py${{ matrix.python-version }}
-          path: dist
-
       - name: Install and test
         env:
           LLVMLITE_DIST_TEST: "1"
@@ -221,10 +188,8 @@ jobs:
           "$PYTHON_PATH" -m venv .venv && source .venv/bin/activate
           python -m pip install --upgrade pip setuptools wheel
           echo "Installing lief for distribution testing"
-          # TODO: delete when PyLIEF ships free-threaded wheels
-          if [[ "${{ matrix.python-version }}" == *t ]]; then
-              python -m pip install dist/lief*.whl
-          else
+          # TODO: make unconditional when PyLIEF ships free-threaded wheels
+          if [[ "${{ matrix.python-version }}" != *t ]]; then
               python -m pip install -v lief
           fi
           cd dist && python -m pip install -v ./llvmlite*.whl
